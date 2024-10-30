@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Universal Yoga</string>
+    <string name="add_new_class">Add new class</string>
+    <string name="search">Search</string>
+    <string name="search_classes">Search classes</string>
+</resources>
