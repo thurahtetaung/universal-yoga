@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class MainActivity : AppCompatActivity() {
@@ -20,12 +21,16 @@ class MainActivity : AppCompatActivity() {
     private lateinit var addCourseFab: FloatingActionButton
     private lateinit var topAppBar: MaterialToolbar
     private lateinit var dbHelper: YogaDBHelper
+    private lateinit var syncManager: SyncManager
+    private var isNetworkAvailable = false
+    private lateinit var networkHelper: NetworkConnectionHelper
     private val courses = mutableListOf<YogaCourse>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+        syncManager = SyncManager(this)
+        setupNetworkObserver()
         // Initialize database first
         initializeDatabase()
 
@@ -38,7 +43,12 @@ class MainActivity : AppCompatActivity() {
         // Load initial data
         loadCourses()
     }
-
+    private fun setupNetworkObserver() {
+        syncManager.networkHelper.observe(this) { isConnected ->
+            isNetworkAvailable = isConnected
+            Log.d("MainActivity", "Network status changed: $isConnected")
+        }
+    }
     private fun initializeDatabase() {
         dbHelper = YogaDBHelper(this)
         try {
@@ -266,18 +276,66 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.top_app_bar, menu)
+        // Inflate both menus
+        menuInflater.inflate(R.menu.top_app_bar, menu)  // Contains search
+        menuInflater.inflate(R.menu.sync_menu, menu)    // Contains sync options
         return true
     }
-
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
+            R.id.menu_upload -> {
+                Log.d("MainActivity", "Current network status: $isNetworkAvailable")
+                if (isNetworkAvailable) {
+                    showUploadConfirmationDialog()
+                } else {
+                    showNoNetworkDialog()
+                }
+                true
+            }
             R.id.search -> {
                 startActivity(Intent(this, SearchActivity::class.java))
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+
+    private fun showNoNetworkDialog() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("No Internet Connection")
+            .setMessage("Please check your internet connection and try again.")
+            .setPositiveButton("OK", null)
+            .show()
+    }
+    private fun showUploadConfirmationDialog() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Upload Data")
+            .setMessage("Do you want to upload all local data to the server?")
+            .setPositiveButton("Upload") { _, _ ->
+                uploadData()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+    private fun uploadData() {
+        syncManager.uploadDataToServer(object : SyncManager.SyncCallback {
+            override fun onSuccess(message: String) {
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onError(error: String) {
+                runOnUiThread {
+                    MaterialAlertDialogBuilder(this@MainActivity)
+                        .setTitle("Upload Error")
+                        .setMessage(error)
+                        .setPositiveButton("OK", null)
+                        .show()
+                }
+            }
+        })
     }
 
     override fun onDestroy() {

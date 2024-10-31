@@ -79,6 +79,7 @@ class YogaDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
     }
     override fun onConfigure(db: SQLiteDatabase?) {
         super.onConfigure(db)
+        // Enable foreign keys
         db?.setForeignKeyConstraintsEnabled(true)
     }
     // Course CRUD operations
@@ -204,7 +205,28 @@ class YogaDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
         cursor.close()
         return classes
     }
+    fun getAllClasses(): List<YogaClass> {
+        val classes = mutableListOf<YogaClass>()
+        val db = this.readableDatabase
+        val query = "SELECT * FROM $TABLE_CLASSES"
 
+        val cursor = db.rawQuery(query, null)
+
+        if (cursor.moveToFirst()) {
+            do {
+                val yogaClass = YogaClass(
+                    id = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_CLASS_ID)),
+                    courseId = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_COURSE_ID)),
+                    date = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DATE)),
+                    teacher = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CLASS_TEACHER)),
+                    comments = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_COMMENTS))
+                )
+                classes.add(yogaClass)
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return classes
+    }
 
     fun searchClassesByTeacher(teacherName: String): List<SearchResult> {
         val results = mutableListOf<SearchResult>()
