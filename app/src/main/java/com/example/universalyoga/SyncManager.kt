@@ -3,15 +3,15 @@ package com.example.universalyoga
 import android.content.Context
 import android.util.Log
 import com.android.volley.Request
-import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.JsonArrayRequest
 import com.android.volley.toolbox.Volley
 import org.json.JSONArray
 import org.json.JSONObject
 
 class SyncManager(private val context: Context) {
     private val dbHelper = YogaDBHelper(context)
-    private val baseUrl = "http://10.0.2.2:3000/api/sync"
-    val networkHelper = NetworkConnectionHelper(context)  // Changed to public
+    private val baseUrl = "http://10.0.2.2/yogasite"
+    val networkHelper = NetworkConnectionHelper(context)
 
     interface SyncCallback {
         fun onSuccess(message: String)
@@ -25,78 +25,105 @@ class SyncManager(private val context: Context) {
         }
 
         try {
-            // Get all courses and classes from local database
             val courses = dbHelper.getAllCourses()
-            val classes = dbHelper.getAllClasses() // Get all classes
-            Log.d(TAG, "Courses to upload: ${courses.size}")
-            Log.d(TAG, "Classes to upload: ${classes.size}")
-            // Log the first few items of each list for verification
-            courses.take(2).forEach { course ->
-                Log.d(TAG, "Sample course: $course")
-            }
-            classes.take(2).forEach { yogaClass ->
-                Log.d(TAG, "Sample class: $yogaClass")
-            }
-            // Create JSON Arrays for courses and classes
+            val classes = dbHelper.getAllClasses()
+
+            // Create JSON Arrays in the format expected by PHP endpoints
             val coursesJsonArray = JSONArray()
             courses.forEach { course ->
                 coursesJsonArray.put(JSONObject().apply {
                     put("id", course.id)
+                    put("day", course.dayOfWeek)
+                    put("time", course.timeOfDay)
                     put("type", course.type)
-                    put("dayOfWeek", course.dayOfWeek)
-                    put("timeOfDay", course.timeOfDay)
-                    put("duration", course.duration)
                     put("capacity", course.capacity)
-                    put("price", course.price)
-                    put("description", course.description)
+                    put("duration", course.duration)
+                    put("price", course.price.toString())  // Convert to string as PHP expects text
+                    put("description", course.description ?: "")
                 })
             }
 
-            val classesJsonArray = JSONArray()
-            classes.forEach { yogaClass ->
-                classesJsonArray.put(JSONObject().apply {
-                    put("id", yogaClass.id)
-                    put("courseId", yogaClass.courseId)
-                    put("date", yogaClass.date)
-                    put("teacher", yogaClass.teacher)
-                    put("comments", yogaClass.comments)
-                })
-            }
+            // Log the JSON being sent
+            Log.d(TAG, "Sending courses JSON: ${coursesJsonArray.toString(2)}")
 
-            // Create the main JSON payload
-            val jsonPayload = JSONObject().apply {
-                put("courses", coursesJsonArray)
-                put("classes", classesJsonArray)
-            }
-
-            Log.d(TAG, "Upload payload: $jsonPayload")
-
-            // Make API request
-            val request = JsonObjectRequest(
-                Request.Method.POST,
-                "$baseUrl/upload",
-                jsonPayload,
+            // Create a custom JsonArrayRequest that handles string responses
+            val courseRequest = object : JsonArrayRequest(
+                Method.POST,
+                "$baseUrl/saveCourse.php",
+                coursesJsonArray,
                 { response ->
-                    Log.d(TAG, "Upload response: $response")
-                    val success = response.optBoolean("success", false)
-                    if (success) {
-                        callback.onSuccess("Data uploaded successfully")
-                    } else {
-                        callback.onError(response.optString("message", "Unknown error"))
-                    }
+                    Log.d(TAG, "Course upload success: $response")
+                    uploadClasses(classes, callback)
                 },
                 { error ->
-                    Log.e(TAG, "Upload error: ${error.message}", error)
-                    callback.onError("Network error: ${error.message}")
+                    // Log the actual error response from server
+                    val networkResponse = error.networkResponse
+                    val errorMessage = if (networkResponse?.data != null) {
+                        String(networkResponse.data)
+                    } else {
+                        error.message ?: "Unknown error"
+                    }
+                    Log.e(TAG, "Course upload error: $errorMessage")
+                    callback.onError("Error uploading courses: $errorMessage")
                 }
-            )
+            ) {
+                override fun getHeaders(): MutableMap<String, String> {
+                    val headers = HashMap<String, String>()
+                    headers["Content-Type"] = "application/json"
+                    return headers
+                }
+            }
 
-            Volley.newRequestQueue(context).add(request)
+            Volley.newRequestQueue(context).add(courseRequest)
 
         } catch (e: Exception) {
             Log.e(TAG, "Error preparing upload: ${e.message}", e)
             callback.onError("Error preparing data: ${e.message}")
         }
+    }
+
+    private fun uploadClasses(classes: List<YogaClass>, callback: SyncCallback) {
+        val classesJsonArray = JSONArray()
+        classes.forEach { yogaClass ->
+            classesJsonArray.put(JSONObject().apply {
+                put("id", yogaClass.id)
+                put("date_of_class", yogaClass.date)
+                put("teacher", yogaClass.teacher)
+                put("course_id", yogaClass.courseId)
+                put("comments", yogaClass.comments ?: "")
+            })
+        }
+
+        // Log the JSON being sent
+        Log.d(TAG, "Sending classes JSON: ${classesJsonArray.toString(2)}")
+
+        val classRequest = object : JsonArrayRequest(
+            Method.POST,
+            "$baseUrl/saveClass.php",
+            classesJsonArray,
+            { response ->
+                Log.d(TAG, "Class upload success: $response")
+                callback.onSuccess("Data uploaded successfully")
+            },
+            { error ->
+                val networkResponse = error.networkResponse
+                val errorMessage = if (networkResponse?.data != null) {
+                    String(networkResponse.data)
+                } else {
+                    error.message ?: "Unknown error"
+                }
+                Log.e(TAG, "Class upload error: $errorMessage")
+                callback.onError("Error uploading classes: $errorMessage")
+            }
+        ) {
+            override fun getHeaders(): MutableMap<String, String> {
+                val headers = HashMap<String, String>()
+                headers["Content-Type"] = "application/json"
+                return headers
+            }
+        }
+
+        Volley.newRequestQueue(context).add(classRequest)
     }
 
     companion object {

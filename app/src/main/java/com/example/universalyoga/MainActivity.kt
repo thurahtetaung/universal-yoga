@@ -23,7 +23,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var dbHelper: YogaDBHelper
     private lateinit var syncManager: SyncManager
     private var isNetworkAvailable = false
-    private lateinit var networkHelper: NetworkConnectionHelper
     private val courses = mutableListOf<YogaCourse>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,13 +62,6 @@ class MainActivity : AppCompatActivity() {
             if (count == 0) {
                 addTestData()
             }
-
-//            // Clear existing data
-//            db.execSQL("DELETE FROM classes")
-//            db.execSQL("DELETE FROM courses")
-//            // Add fresh test data
-//            addTestData()
-
 
         } catch (e: Exception) {
             Log.e("MainActivity", "Error initializing database", e)
@@ -278,13 +270,12 @@ class MainActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate both menus
         menuInflater.inflate(R.menu.top_app_bar, menu)  // Contains search
-        menuInflater.inflate(R.menu.sync_menu, menu)    // Contains sync options
+        menuInflater.inflate(R.menu.sync_menu, menu)    // Contains upload
         return true
     }
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.menu_upload -> {
-                Log.d("MainActivity", "Current network status: $isNetworkAvailable")
                 if (isNetworkAvailable) {
                     showUploadConfirmationDialog()
                 } else {

@@ -216,7 +216,7 @@ class YogaDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
             do {
                 val yogaClass = YogaClass(
                     id = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_CLASS_ID)),
-                    courseId = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_COURSE_ID)),
+                    courseId = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_COURSE_ID_FK)),
                     date = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DATE)),
                     teacher = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CLASS_TEACHER)),
                     comments = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_COMMENTS))
