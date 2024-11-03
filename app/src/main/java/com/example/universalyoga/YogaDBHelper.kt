@@ -179,10 +179,6 @@ class YogaDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
         db.close()
         return result
     }
-    fun deleteClassesForCourse(courseId: Long): Int {
-        val db = writableDatabase
-        return db.delete(TABLE_CLASSES, "$COLUMN_COURSE_ID_FK = ?", arrayOf(courseId.toString()))
-    }
     fun getClassesForCourse(courseId: Long): List<YogaClass> {
         val classes = mutableListOf<YogaClass>()
         val db = readableDatabase

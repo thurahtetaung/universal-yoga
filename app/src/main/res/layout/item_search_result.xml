@@ -37,13 +37,31 @@
             android:textAppearance="?attr/textAppearanceBodyMedium"
             tools:text="Teacher: John Doe"/>
 
-        <TextView
-            android:id="@+id/scheduleText"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:textAppearance="?attr/textAppearanceBodySmall"
-            tools:text="Mondays at 10:00"/>
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/scheduleText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                tools:text="Mondays at 10:00"/>
+
+            <TextView
+                android:id="@+id/detailsHint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Details..."
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorPrimary"
+                android:drawableEnd="@drawable/ic_arrow_forward"
+                android:drawablePadding="4dp" />
+
+        </LinearLayout>
 
     </LinearLayout>
 

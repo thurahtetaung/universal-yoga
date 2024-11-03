@@ -7,12 +7,15 @@
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        >
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/searchToolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
             app:navigationIcon="@drawable/ic_back"
             app:title="Search Classes"
             style="@style/Widget.Material3.Toolbar.Surface" />
@@ -106,5 +109,16 @@
         android:layout_weight="1"
         android:padding="16dp"
         android:clipToPadding="false" />
+
+    <TextView
+        android:id="@+id/noResultsTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="No results found"
+        android:visibility="gone"
+        android:layout_gravity="center"
+        android:textSize="18sp"
+        android:textColor="@android:color/darker_gray"/>
 
 </LinearLayout>

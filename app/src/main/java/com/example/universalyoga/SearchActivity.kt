@@ -7,7 +7,9 @@ import android.text.TextWatcher
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
+import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -32,6 +34,7 @@ class SearchActivity : AppCompatActivity() {
     private lateinit var daySearchInput: AutoCompleteTextView
     private lateinit var searchResultsRecyclerView: RecyclerView
     private lateinit var searchResultsAdapter: SearchResultAdapter
+    private lateinit var noResultsTextView: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,6 +46,16 @@ class SearchActivity : AppCompatActivity() {
         setupTabLayout()
         setupSearchInputs()
         setupRecyclerView()
+        // Directly show teacher search and perform search
+        showTeacherSearch()
+        performTeacherSearch(teacherSearchInput.text.toString())
+        // Handle back button press
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                // Your custom back button handling logic
+                finish()
+            }
+        })
     }
 
     private fun initializeViews() {
@@ -55,21 +68,31 @@ class SearchActivity : AppCompatActivity() {
         dateSearchInput = findViewById(R.id.dateSearchInput)
         daySearchInput = findViewById(R.id.daySearchInput)
         searchResultsRecyclerView = findViewById(R.id.searchResultsRecyclerView)
+        noResultsTextView = findViewById(R.id.noResultsTextView)
     }
 
     private fun setupToolbar() {
         setSupportActionBar(searchToolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        searchToolbar.setNavigationOnClickListener { onBackPressed() }
+        searchToolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
     }
 
     private fun setupTabLayout() {
         tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
                 when (tab?.position) {
-                    0 -> showTeacherSearch()
-                    1 -> showDateSearch()
-                    2 -> showDaySearch()
+                    0 -> {
+                        showTeacherSearch()
+                        performTeacherSearch(teacherSearchInput.text.toString())
+                    }
+                    1 -> {
+                        showDateSearch()
+                        performDateSearch(dateSearchInput.text.toString())
+                    }
+                    2 -> {
+                        showDaySearch()
+                        performDaySearch(daySearchInput.text.toString())
+                    }
                 }
             }
             override fun onTabUnselected(tab: TabLayout.Tab?) {}
@@ -83,7 +106,7 @@ class SearchActivity : AppCompatActivity() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
-                if (s?.length ?: 0 >= 2) { // Search after 2 characters
+                if ((s?.length ?: 0) >= 2) { // Search start after 2 characters
                     performTeacherSearch(s.toString())
                 }
             }
@@ -164,22 +187,37 @@ class SearchActivity : AppCompatActivity() {
     }
 
     private fun performTeacherSearch(query: String) {
-        val results = dbHelper.searchClassesByTeacher(query)
-        searchResultsAdapter.submitList(results)
+        if (query.isBlank()) {
+            clearSearchResults()
+        } else {
+            val results = dbHelper.searchClassesByTeacher(query)
+            updateSearchResults(results)
+        }
     }
 
     private fun performDateSearch(date: String) {
         val results = dbHelper.searchClassesByDate(date)
-        searchResultsAdapter.submitList(results)
+        updateSearchResults(results)
     }
 
     private fun performDaySearch(day: String) {
         val results = dbHelper.searchClassesByDayOfWeek(day)
-        searchResultsAdapter.submitList(results)
+        updateSearchResults(results)
     }
-
+    private fun updateSearchResults(results: List<SearchResult>) {
+        if (results.isEmpty()) {
+            noResultsTextView.visibility = View.VISIBLE
+            searchResultsRecyclerView.visibility = View.GONE
+        } else {
+            noResultsTextView.visibility = View.GONE
+            searchResultsRecyclerView.visibility = View.VISIBLE
+            searchResultsAdapter.submitList(results)
+        }
+    }
     private fun clearSearchResults() {
         searchResultsAdapter.submitList(emptyList())
+        noResultsTextView.visibility = View.VISIBLE
+        searchResultsRecyclerView.visibility = View.GONE
     }
 
     override fun onDestroy() {
