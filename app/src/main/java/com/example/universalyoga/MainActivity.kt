@@ -29,6 +29,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         syncManager = SyncManager(this)
+        // Initialize network observer to check network status
         setupNetworkObserver()
         // Initialize database first
         initializeDatabase()
@@ -48,6 +49,7 @@ class MainActivity : AppCompatActivity() {
             Log.d("MainActivity", "Network status changed: $isConnected")
         }
     }
+    // Initialize the database with test data if it's empty, for demonstration purposes
     private fun initializeDatabase() {
         dbHelper = YogaDBHelper(this)
         try {
@@ -69,6 +71,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Add dummy test data to the database
     private fun addTestData() {
         val testCourses = listOf(
             YogaCourse(
@@ -192,6 +195,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Load courses from the database
     private fun loadCourses() {
         try {
             courses.clear()
@@ -206,6 +210,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Register activity result contracts for starting activities and handling results
     private val addCourseResult = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -254,6 +259,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Update the RecyclerView with the latest course data
     private fun updateRecyclerView(courses: List<YogaCourse>) {
         coursesRecyclerView.adapter = YogaCourseAdapter(courses) { course ->
             val intent = Intent(this, CourseDetailActivity::class.java).apply {
@@ -268,8 +274,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate both menus
-        menuInflater.inflate(R.menu.top_app_bar, menu)  // Contains search
+        menuInflater.inflate(R.menu.top_app_bar, menu)  // Contains search and resetDatabase
         menuInflater.inflate(R.menu.sync_menu, menu)    // Contains upload
         return true
     }
@@ -277,21 +282,53 @@ class MainActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.menu_upload -> {
                 if (isNetworkAvailable) {
+                    // Show a confirmation dialog before uploading data
                     showUploadConfirmationDialog()
                 } else {
+                    // Show a dialog if there is no network connection
                     showNoNetworkDialog()
                 }
                 true
             }
             R.id.search -> {
+                // Start the search activity when the search icon is clicked
                 startActivity(Intent(this, SearchActivity::class.java))
+                true
+            }
+            R.id.resetDatabase -> {
+                // Show a confirmation dialog before resetting the database
+                showResetDatabaseConfirmationDialog()
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
     }
 
+    // Show a confirmation dialog before resetting the database
+    private fun showResetDatabaseConfirmationDialog() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Reset Database")
+            .setMessage("Are you sure you want to reset the local database? This action cannot be undone.")
+            .setPositiveButton("Reset") { _, _ ->
+                // Reset the database
+                resetDatabase()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
 
+    // Reset the database by deleting all data and updating the UI
+    private fun resetDatabase() {
+        try {
+            dbHelper.resetDatabase()
+            loadCourses()
+            Toast.makeText(this, "Database reset successfully", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Error resetting database", e)
+            Toast.makeText(this, "Error resetting database", Toast.LENGTH_SHORT).show()
+        }
+    }
+    // Show a dialog if there is no network connection
     private fun showNoNetworkDialog() {
         MaterialAlertDialogBuilder(this)
             .setTitle("No Internet Connection")
@@ -299,6 +336,7 @@ class MainActivity : AppCompatActivity() {
             .setPositiveButton("OK", null)
             .show()
     }
+    // Show a confirmation dialog before uploading data
     private fun showUploadConfirmationDialog() {
         MaterialAlertDialogBuilder(this)
             .setTitle("Upload Data")
@@ -309,16 +347,20 @@ class MainActivity : AppCompatActivity() {
             .setNegativeButton("Cancel", null)
             .show()
     }
+    // Upload data to the server using the SyncManager
     private fun uploadData() {
+        // Call the uploadDataToServer method of the SyncManager
         syncManager.uploadDataToServer(object : SyncManager.SyncCallback {
             override fun onSuccess(message: String) {
                 runOnUiThread {
+                    // Show a toast message on the UI thread
                     Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show()
                 }
             }
 
             override fun onError(error: String) {
                 runOnUiThread {
+                    // Show an error dialog on the UI thread
                     MaterialAlertDialogBuilder(this@MainActivity)
                         .setTitle("Upload Error")
                         .setMessage(error)

@@ -20,7 +20,7 @@
             android:layout_alignParentEnd="true"
             android:layout_alignParentTop="true"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Class options"
+            android:contentDescription="@string/string_class_options"
             android:padding="4dp"
             app:srcCompat="@drawable/ic_more_vert" />
 

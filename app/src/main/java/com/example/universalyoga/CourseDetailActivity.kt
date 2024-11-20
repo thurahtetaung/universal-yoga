@@ -2,7 +2,6 @@ package com.example.universalyoga
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -25,7 +24,6 @@ class CourseDetailActivity : AppCompatActivity() {
     private lateinit var courseType: TextView
     private lateinit var schedule: TextView
     private lateinit var duration: TextView
-    private lateinit var teacher: TextView
     private lateinit var capacity: TextView
     private lateinit var price: TextView
     private lateinit var description: TextView
@@ -44,6 +42,7 @@ class CourseDetailActivity : AppCompatActivity() {
         // Get course from intent
         currentCourse = intent.getParcelableExtra("COURSE")
 
+        // If course is null, show error and finish
         if (currentCourse == null) {
             Toast.makeText(this, "Error loading course", Toast.LENGTH_SHORT).show()
             finish()
@@ -51,13 +50,14 @@ class CourseDetailActivity : AppCompatActivity() {
         }
 
         initializeViews()
-        setupToolbar()
+        setupToolbar() // Set up the app bar
         displayCourseDetails()
         loadClasses()  // Load classes from database
-        setupClassesList()
+        setupClassesList() // Set up the RecyclerView
         setupFab()
     }
 
+    // Initialize all views
     private fun initializeViews() {
         topAppBar = findViewById(R.id.topAppBar)
         courseType = findViewById(R.id.courseType)
@@ -69,6 +69,7 @@ class CourseDetailActivity : AppCompatActivity() {
         classesRecyclerView = findViewById(R.id.classesRecyclerView)
         addClassFab = findViewById(R.id.addClassFab)
     }
+    // Load classes from the database for the current course and update the UI
     private fun loadClasses() {
         currentCourse?.let { course ->
             classes.clear()
@@ -79,6 +80,7 @@ class CourseDetailActivity : AppCompatActivity() {
             updateClassesList()
         }
     }
+    // Set up the app bar
     private fun setupToolbar() {
         setSupportActionBar(topAppBar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -87,7 +89,7 @@ class CourseDetailActivity : AppCompatActivity() {
         }
     }
 
-
+    // Display course details in the UI
     private fun displayCourseDetails() {
         currentCourse?.let { course ->
             supportActionBar?.title = course.type  // Set the title in the app bar
@@ -96,9 +98,10 @@ class CourseDetailActivity : AppCompatActivity() {
             duration.text = "${course.duration} minutes"
             capacity.text = "${course.capacity} people"
             price.text = "£${course.price}"
-            description.text = course.description ?: "No description available"
+            description.text = course.description ?: "No description available" // Show description or default text
         }
     }
+    // Register a result launcher for the EditCourseActivity
     private val editCourseResult = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -109,18 +112,19 @@ class CourseDetailActivity : AppCompatActivity() {
                 val existingClasses = dbHelper.getClassesForCourse(newCourse.id)
 
                 when {
-                    // If day changed, show day change dialog
+                    // If day changed, show day change confirmation dialog
                     currentCourse?.dayOfWeek != newCourse.dayOfWeek && existingClasses.isNotEmpty() -> {
                         showDayChangeConfirmationDialog(newCourse, existingClasses)
                     }
                     // Otherwise, just update
                     else -> {
-                        updateCourseAndClasses(newCourse, existingClasses)
+                        updateCourse(newCourse)
                     }
                 }
             }
         }
     }
+    // Show a dialog to confirm changing the course day and let the user choose what to do with existing classes
     private fun showDayChangeConfirmationDialog(
         newCourse: YogaCourse,
         existingClasses: List<YogaClass>
@@ -139,7 +143,8 @@ class CourseDetailActivity : AppCompatActivity() {
                 dialog.dismiss()
             }
             .setNegativeButton("Keep Existing") { dialog, _ ->
-                updateCourseAndClasses(newCourse, existingClasses)
+                // Just update the course without changing classes
+                updateCourse(newCourse)
                 dialog.dismiss()
             }
             .setPositiveButton("Delete All") { dialog, _ ->
@@ -151,8 +156,8 @@ class CourseDetailActivity : AppCompatActivity() {
                         dbHelper.deleteClass(yogaClass.id)
                     }
                     currentCourse = newCourse
-                    displayCourseDetails()
-                    loadClasses()  // This will now properly update the UI
+                    displayCourseDetails() // Update the UI with the new course details
+                    loadClasses()  // Reload classes to update the UI
                     setResult(RESULT_OK)
                     Toast.makeText(this, "Course updated and classes cleared", Toast.LENGTH_SHORT).show()
                 } else {
@@ -162,26 +167,27 @@ class CourseDetailActivity : AppCompatActivity() {
             }
             .show()
     }
-    private fun updateCourseAndClasses(
+    // Update the course in the database and the UI
+    private fun updateCourse(
         newCourse: YogaCourse,
-        existingClasses: List<YogaClass>
     ) {
         // Update the course
         val updateResult = dbHelper.updateCourse(newCourse.id, newCourse)
         if (updateResult > 0) {
             currentCourse = newCourse
-            displayCourseDetails()
-            loadClasses()  // This will now properly update the UI
+            displayCourseDetails() // Update the UI
             setResult(RESULT_OK)
             Toast.makeText(this, "Course updated successfully", Toast.LENGTH_SHORT).show()
         } else {
             Toast.makeText(this, "Error updating course", Toast.LENGTH_SHORT).show()
         }
     }
+    // Set up the RecyclerView for displaying classes
     private fun setupClassesList() {
         classesRecyclerView.layoutManager = LinearLayoutManager(this)
-        updateClassesList()
+        updateClassesList() // Initialize the adapter and set it to the RecyclerView
     }
+    // Show a popup menu with options to edit or delete a class
     private fun showClassOptionsPopupMenu(view: View, yogaClass: YogaClass) {
         PopupMenu(this, view).apply {
             menuInflater.inflate(R.menu.class_options_menu, menu)
@@ -192,7 +198,7 @@ class CourseDetailActivity : AppCompatActivity() {
                         true
                     }
                     R.id.deleteClass -> {
-                        showDeleteClassConfirmationDialog(yogaClass)
+                        showDeleteClassConfirmationDialog(yogaClass) // Show delete confirmation dialog
                         true
                     }
                     else -> false
@@ -201,15 +207,17 @@ class CourseDetailActivity : AppCompatActivity() {
             show()
         }
     }
-
+    // Edit a class
     private fun editClass(yogaClass: YogaClass) {
         currentCourse?.let { course ->
+            // Show the edit class bottom sheet
             val editSheet = EditClassBottomSheet.newInstance(yogaClass, course.dayOfWeek)
             editSheet.setEditClassListener(object : EditClassBottomSheet.EditClassListener {
-                override fun onClassUpdated(updatedClass: YogaClass) {
-                    val index = classes.indexOfFirst { it.id == updatedClass.id }
+                // Update the class in the database and the UI
+                override fun onClassUpdated(yogaClass: YogaClass) {
+                    val index = classes.indexOfFirst { it.id == yogaClass.id }
                     if (index != -1) {
-                        classes[index] = updatedClass
+                        classes[index] = yogaClass
                         updateClassesList()
                         Toast.makeText(
                             this@CourseDetailActivity,
@@ -219,6 +227,7 @@ class CourseDetailActivity : AppCompatActivity() {
                     }
                 }
             })
+            // Show the bottom sheet
             editSheet.show(supportFragmentManager, "editClassBottomSheet")
         }
     }
@@ -233,6 +242,7 @@ class CourseDetailActivity : AppCompatActivity() {
                 )
                 bottomSheet.setAddClassListener(object : AddClassBottomSheet.AddClassListener {
                     override fun onClassAdded(yogaClass: YogaClass) {
+                        // Insert the new class into the database
                         val id = dbHelper.insertClass(yogaClass)
                         if (id > 0) {
                             loadClasses()
@@ -264,7 +274,7 @@ class CourseDetailActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.editCourse -> {
-                launchEditCourse()
+                launchEditCourse() // Launch the EditCourseActivity
                 true
             }
             R.id.deleteCourse -> {
@@ -275,12 +285,14 @@ class CourseDetailActivity : AppCompatActivity() {
         }
     }
     private fun launchEditCourse() {
+        // Launch the EditCourseActivity with the current course to edit
         val intent = Intent(this, CourseFormActivity::class.java).apply {
             putExtra("COURSE_TO_EDIT", currentCourse)
         }
         editCourseResult.launch(intent)
     }
     private fun deleteClass(yogaClass: YogaClass) {
+        // Delete the class from the database
         val result = dbHelper.deleteClass(yogaClass.id)
         if (result > 0) {
             loadClasses()
@@ -291,6 +303,7 @@ class CourseDetailActivity : AppCompatActivity() {
         }
     }
 
+    // Update the list of classes in the RecyclerView
     private fun updateClassesList() {
         if (!::scheduledClassAdapter.isInitialized) {
             scheduledClassAdapter = ScheduledClassAdapter(classes) { view, yogaClass ->
@@ -301,6 +314,7 @@ class CourseDetailActivity : AppCompatActivity() {
             scheduledClassAdapter.updateClasses(classes)
         }
     }
+    // Show a dialog to confirm deleting the course
     private fun showDeleteConfirmationDialog() {
         MaterialAlertDialogBuilder(this)
             .setTitle("Delete Course")
@@ -323,6 +337,7 @@ class CourseDetailActivity : AppCompatActivity() {
             }
             .show()
     }
+    // Show a dialog to confirm deleting a class
     private fun showDeleteClassConfirmationDialog(yogaClass: YogaClass) {
         MaterialAlertDialogBuilder(this)
             .setTitle("Delete Class")

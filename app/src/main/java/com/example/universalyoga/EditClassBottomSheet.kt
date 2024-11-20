@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.TextView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.textfield.TextInputEditText
@@ -28,10 +29,12 @@ class EditClassBottomSheet : BottomSheetDialogFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Retrieve the YogaClass object and course day from the arguments.
         yogaClass = arguments?.getParcelable("CLASS")
         courseDay = arguments?.getString("COURSE_DAY")
         dbHelper = YogaDBHelper(requireContext())
 
+        // Set the selected date to the date of the existing class if it is being edited.
         yogaClass?.let { existingClass ->
             val sdf = SimpleDateFormat("MMMM d, yyyy", Locale.getDefault())
             selectedDate.time = sdf.parse(existingClass.date) ?: Date()
@@ -49,12 +52,17 @@ class EditClassBottomSheet : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Find views and set up click listeners
+        val titleTextView = view.findViewById<TextView>(R.id.titleTextView)
         val dateInput = view.findViewById<TextInputEditText>(R.id.dateInput)
         val teacherInput = view.findViewById<TextInputEditText>(R.id.teacherInput)
         val commentsInput = view.findViewById<TextInputEditText>(R.id.commentsInput)
         val saveButton = view.findViewById<Button>(R.id.saveButton)
         val cancelButton = view.findViewById<Button>(R.id.cancelButton)
 
+        // Set the title of the bottom sheet to "Edit Class" if the class is being edited.
+
+        titleTextView.text = if (yogaClass == null) "Add New Class" else "Edit Class"
         yogaClass?.let { existingClass ->
             dateInput.setText(existingClass.date)
             teacherInput.setText(existingClass.teacher)
@@ -75,7 +83,7 @@ class EditClassBottomSheet : BottomSheetDialogFragment() {
                 teacherInput.error = "Teacher is required"
                 return@setOnClickListener
             }
-
+            // Update the existing class with the new details and show a confirmation dialog.
             yogaClass?.let { existingClass ->
                 val updatedClass = existingClass.copy(
                     date = SimpleDateFormat("MMMM d, yyyy", Locale.getDefault())
@@ -83,7 +91,7 @@ class EditClassBottomSheet : BottomSheetDialogFragment() {
                     teacher = teacher,
                     comments = commentsInput.text?.toString()
                 )
-
+                // Show a confirmation dialog before saving the updated class.
                 val confirmationMessage = buildString {
                     appendLine("Please confirm the updated class details:")
                     appendLine()
@@ -98,6 +106,7 @@ class EditClassBottomSheet : BottomSheetDialogFragment() {
                     .setTitle("Confirm Class Update")
                     .setMessage(confirmationMessage)
                     .setPositiveButton("Confirm") { _, _ ->
+                        // Update the class in the database and notify the listener.
                         val result = dbHelper.updateClass(existingClass.id, updatedClass)
                         if (result > 0) {
                             listener?.onClassUpdated(updatedClass)
@@ -118,21 +127,22 @@ class EditClassBottomSheet : BottomSheetDialogFragment() {
     private fun showDatePicker(dateInput: TextInputEditText) {
         val today = MaterialDatePicker.todayInUtcMilliseconds()
         val calendar = Calendar.getInstance()
-
+        // Create a DateValidator to restrict the selection to the course day and future dates.
         val validator = object : CalendarConstraints.DateValidator {
             override fun isValid(date: Long): Boolean {
                 if (date < today) return false
 
                 calendar.timeInMillis = date
+                // Get the day of the week for the selected date.
                 val dayOfWeek = SimpleDateFormat("EEEE", Locale.getDefault())
                     .format(calendar.time)
-                return courseDay.equals(dayOfWeek, ignoreCase = true)
+                return courseDay.equals(dayOfWeek, ignoreCase = true) // Compare the course day with the selected day of the week.
             }
 
             override fun writeToParcel(dest: android.os.Parcel, flags: Int) {}
             override fun describeContents(): Int = 0
         }
-
+        // Build the constraints for the date picker.
         val constraints = CalendarConstraints.Builder()
             .setStart(today)
             .setValidator(validator)
@@ -165,6 +175,7 @@ class EditClassBottomSheet : BottomSheetDialogFragment() {
     }
 
     companion object {
+        // Create a new instance of the EditClassBottomSheet with the provided YogaClass and course day.
         fun newInstance(yogaClass: YogaClass, courseDay: String) = EditClassBottomSheet().apply {
             arguments = Bundle().apply {
                 putParcelable("CLASS", yogaClass)

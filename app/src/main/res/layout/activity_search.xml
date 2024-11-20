@@ -30,17 +30,17 @@
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Teacher" />
+            android:text="@string/search_tab_teacher" />
 
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Date" />
+            android:text="@string/search_tab_date" />
 
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Day" />
+            android:text="@string/search_tab_day" />
 
     </com.google.android.material.tabs.TabLayout>
 
@@ -54,7 +54,7 @@
             android:id="@+id/teacherSearchLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Enter teacher name"
+            android:hint="@string/search_hint_teacher"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -70,7 +70,7 @@
             android:id="@+id/dateSearchLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Select date"
+            android:hint="@string/search_hint_date"
             android:visibility="gone"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
 
@@ -88,7 +88,7 @@
             android:id="@+id/daySearchLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Select day"
+            android:hint="@string/search_hint_day"
             android:visibility="gone"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
 
@@ -115,7 +115,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="No results found"
+        android:text="@string/string_no_results_found"
         android:visibility="gone"
         android:layout_gravity="center"
         android:textSize="18sp"

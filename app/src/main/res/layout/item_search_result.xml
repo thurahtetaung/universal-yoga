@@ -55,11 +55,11 @@
                 android:id="@+id/detailsHint"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Details..."
+                android:text="@string/string_search_details"
                 android:textAppearance="?attr/textAppearanceBodySmall"
                 android:textColor="?attr/colorPrimary"
-                android:drawableEnd="@drawable/ic_arrow_forward"
-                android:drawablePadding="4dp" />
+                android:drawablePadding="4dp"
+                app:drawableEndCompat="@drawable/ic_arrow_forward" />
 
         </LinearLayout>
 

@@ -1,5 +1,6 @@
 package com.example.universalyoga
 
+// Data class representing a search result
 data class SearchResult(
     val classId: Long,
     val courseId: Long,

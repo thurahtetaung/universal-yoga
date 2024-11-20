@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.Toast
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.textfield.TextInputEditText
@@ -43,6 +42,7 @@ class AddClassBottomSheet : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Find views and set up click listeners
         val dateInput = view.findViewById<TextInputEditText>(R.id.dateInput)
         val teacherInput = view.findViewById<TextInputEditText>(R.id.teacherInput)
         val commentsInput = view.findViewById<TextInputEditText>(R.id.commentsInput)
@@ -82,6 +82,7 @@ class AddClassBottomSheet : BottomSheetDialogFragment() {
         }
     }
 
+    // Show a confirmation dialog before saving the class
     private fun showConfirmationDialog(yogaClass: YogaClass) {
         val confirmationMessage = buildString {
             appendLine("Please confirm the class details:")
@@ -111,11 +112,12 @@ class AddClassBottomSheet : BottomSheetDialogFragment() {
             }
             .show()
     }
-
+    // Show the date picker dialog
     private fun showDatePicker(dateInput: TextInputEditText) {
         val today = MaterialDatePicker.todayInUtcMilliseconds()
         val calendar = Calendar.getInstance()
 
+        // Create a date validator that only allows dates in the future and on the correct day of the week
         val validator = object : CalendarConstraints.DateValidator {
             override fun isValid(date: Long): Boolean {
                 if (date < today) return false
@@ -130,17 +132,20 @@ class AddClassBottomSheet : BottomSheetDialogFragment() {
             override fun describeContents(): Int = 0
         }
 
+        // Set the constraints for the date picker
         val constraints = CalendarConstraints.Builder()
             .setStart(today)
             .setValidator(validator)
             .build()
 
+        // Create and show the date picker dialog
         val datePickerDialog = MaterialDatePicker.Builder.datePicker()
             .setTitleText("Select date")
             .setSelection(selectedDate.timeInMillis)
             .setCalendarConstraints(constraints)
             .build()
 
+        // Update the selected date when the user picks a date
         datePickerDialog.addOnPositiveButtonClickListener { selection ->
             selectedDate.timeInMillis = selection
             dateInput.setText(
@@ -157,10 +162,12 @@ class AddClassBottomSheet : BottomSheetDialogFragment() {
         Log.d("AddClassBottomSheet", "Listener set")
     }
 
+    // Companion object to create a new instance of the bottom sheet
     companion object {
         private const val ARG_COURSE_ID = "course_id"
         private const val ARG_COURSE_DAY = "course_day"
 
+        // Create a new instance of the bottom sheet with the course ID and day of the week
         fun newInstance(courseId: Long, courseDay: String) = AddClassBottomSheet().apply {
             arguments = Bundle().apply {
                 putLong(ARG_COURSE_ID, courseId)

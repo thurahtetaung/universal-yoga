@@ -61,7 +61,7 @@
 
                         <TableRow android:layout_marginBottom="8dp">
                             <TextView
-                                android:text="Type:"
+                                android:text="@string/course_type"
                                 android:textStyle="bold"/>
                             <TextView
                                 android:id="@+id/courseType"
@@ -71,7 +71,7 @@
 
                         <TableRow android:layout_marginBottom="8dp">
                             <TextView
-                                android:text="Schedule:"
+                                android:text="@string/course_schedule"
                                 android:textStyle="bold"/>
                             <TextView
                                 android:id="@+id/schedule"
@@ -81,7 +81,7 @@
 
                         <TableRow android:layout_marginBottom="8dp">
                             <TextView
-                                android:text="Duration:"
+                                android:text="@string/course_duration"
                                 android:textStyle="bold"/>
                             <TextView
                                 android:id="@+id/duration"
@@ -91,7 +91,7 @@
 
                         <TableRow android:layout_marginBottom="8dp">
                             <TextView
-                                android:text="Capacity:"
+                                android:text="@string/course_capacity"
                                 android:textStyle="bold"/>
                             <TextView
                                 android:id="@+id/capacity"
@@ -101,7 +101,7 @@
 
                         <TableRow android:layout_marginBottom="8dp">
                             <TextView
-                                android:text="Price:"
+                                android:text="@string/course_price"
                                 android:textStyle="bold"/>
                             <TextView
                                 android:id="@+id/price"
@@ -111,7 +111,7 @@
 
                         <TableRow>
                             <TextView
-                                android:text="Description:"
+                                android:text="@string/course_description"
                                 android:textStyle="bold"/>
                             <TextView
                                 android:id="@+id/description"
@@ -128,7 +128,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Scheduled Classes"
+                android:text="@string/title_scheduled_classes"
                 android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:layout_marginBottom="8dp"/>
 
@@ -148,7 +148,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
-        android:contentDescription="Add new class"
+        android:contentDescription="@string/string_add_new_class"
         app:srcCompat="@drawable/ic_add" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

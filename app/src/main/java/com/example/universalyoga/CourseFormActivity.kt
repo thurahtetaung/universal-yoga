@@ -37,13 +37,13 @@ class CourseFormActivity : AppCompatActivity() {
         setContentView(R.layout.activity_course_form)
 
         initializeViews()
-        setupToolbar()
-        setupDropdowns()
-        setupTimePicker()
+        setupToolbar() // Setup the toolbar
+        setupDropdowns() // Setup dropdowns for course type and day
+        setupTimePicker() // Setup time picker for course time
 
         courseToEdit = intent.getParcelableExtra("COURSE_TO_EDIT")
         courseToEdit?.let {
-            populateFields(it)
+            populateFields(it) // Populate fields if editing an existing course
             supportActionBar?.title = "Edit Course"
         }
     }
@@ -60,8 +60,10 @@ class CourseFormActivity : AppCompatActivity() {
     }
 
     private fun setupToolbar() {
-        setSupportActionBar(topAppBar)
+        setSupportActionBar(topAppBar) // Set the toolbar as the action bar
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+        // Set the title of the action bar based on whether adding a new course or editing an existing one
         supportActionBar?.title = if (courseToEdit != null) "Edit Course" else "Add New Course"
 
         topAppBar.setNavigationOnClickListener {
@@ -85,7 +87,7 @@ class CourseFormActivity : AppCompatActivity() {
         timeInput.setOnClickListener {
             val calendar = Calendar.getInstance()
 
-            // If we're editing and have an existing time, parse it
+            // If editing and have an existing time, parse it and set the calendar to that time
             if (!timeInput.text.isNullOrEmpty()) {
                 try {
                     val existingTime = timeInput.text.toString()
@@ -121,6 +123,7 @@ class CourseFormActivity : AppCompatActivity() {
         }
     }
 
+    // Populate fields with existing course details when editing
     private fun populateFields(course: YogaCourse) {
         typeInput.setText(course.type, false)  // false prevents dropdown from showing
         dayInput.setText(course.dayOfWeek, false)
@@ -148,6 +151,7 @@ class CourseFormActivity : AppCompatActivity() {
         }
     }
 
+    // Validate the form fields
     private fun validateForm(): Boolean {
         var isValid = true
 
@@ -184,6 +188,7 @@ class CourseFormActivity : AppCompatActivity() {
         return isValid
     }
 
+    // Save the course details and return to the previous activity
     private fun saveCourse() {
         try {
             val newCourse = YogaCourse(
@@ -197,15 +202,18 @@ class CourseFormActivity : AppCompatActivity() {
                 description = descriptionInput.text.toString().takeIf { it.isNotBlank() }
             )
 
+            // title of the confirmation dialog based on whether editing or adding a new course
             val title = if (courseToEdit != null) {
                 "Confirm Course Update"
             } else {
                 "Confirm New Course"
             }
 
+            // Build the confirmation message based on the course details and whether editing or adding
             val confirmationMessage = buildString {
                 appendLine("Please confirm the ${if (courseToEdit != null) "updated" else "new"} course details:")
                 appendLine()
+                // Append original and new course details if editing to show the changes to the user
                 if (courseToEdit != null) {
                     appendLine("Original Type: ${courseToEdit?.type}")
                     appendLine("New Type: ${newCourse.type}")

@@ -2,7 +2,6 @@ package com.example.universalyoga
 
 import android.content.Context
 import android.util.Log
-import com.android.volley.Request
 import com.android.volley.toolbox.JsonArrayRequest
 import com.android.volley.toolbox.Volley
 import org.json.JSONArray
@@ -10,6 +9,7 @@ import org.json.JSONObject
 
 class SyncManager(private val context: Context) {
     private val dbHelper = YogaDBHelper(context)
+    // Base URL for the PHP scripts
     private val baseUrl = "http://10.0.2.2/yogasite"
     val networkHelper = NetworkConnectionHelper(context)
 
@@ -18,13 +18,16 @@ class SyncManager(private val context: Context) {
         fun onError(error: String)
     }
 
+    // Upload data to the server
     fun uploadDataToServer(callback: SyncCallback) {
+        // Check if there is an internet connection
         if (networkHelper.value != true) {
             callback.onError("No internet connection available")
             return
         }
 
         try {
+            // Get all courses and classes from the local database
             val courses = dbHelper.getAllCourses()
             val classes = dbHelper.getAllClasses()
 
@@ -43,7 +46,7 @@ class SyncManager(private val context: Context) {
                 })
             }
 
-            // Log the JSON being sent
+            // Log the JSON being sent for courses
             Log.d(TAG, "Sending courses JSON: ${coursesJsonArray.toString(2)}")
 
             // Create a custom JsonArrayRequest that handles string responses
@@ -74,6 +77,7 @@ class SyncManager(private val context: Context) {
                 }
             }
 
+            // Add the request to the Volley request queue
             Volley.newRequestQueue(context).add(courseRequest)
 
         } catch (e: Exception) {
@@ -82,7 +86,9 @@ class SyncManager(private val context: Context) {
         }
     }
 
+    // Upload classes to the server
     private fun uploadClasses(classes: List<YogaClass>, callback: SyncCallback) {
+        // Create a JSON Array for classes
         val classesJsonArray = JSONArray()
         classes.forEach { yogaClass ->
             classesJsonArray.put(JSONObject().apply {
@@ -94,7 +100,7 @@ class SyncManager(private val context: Context) {
             })
         }
 
-        // Log the JSON being sent
+        // Log the JSON being sent for classes
         Log.d(TAG, "Sending classes JSON: ${classesJsonArray.toString(2)}")
 
         val classRequest = object : JsonArrayRequest(
@@ -123,6 +129,7 @@ class SyncManager(private val context: Context) {
             }
         }
 
+        // Add the request to the Volley request queue
         Volley.newRequestQueue(context).add(classRequest)
     }
 

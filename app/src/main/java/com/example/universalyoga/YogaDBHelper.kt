@@ -45,7 +45,7 @@ class YogaDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
             )
         """.trimIndent()
 
-        // Create classes table with foreign key
+        // Create classes table with foreign key, ON DELETE CASCADE to remove classes when course is deleted
         val createClassesTable = """
             CREATE TABLE $TABLE_CLASSES (
                 $COLUMN_CLASS_ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -96,6 +96,7 @@ class YogaDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
         return writableDatabase.insert(TABLE_COURSES, null, values)
     }
 
+    // Update course
     fun updateCourse(id: Long, course: YogaCourse): Int {
         val values = ContentValues().apply {
             put(COLUMN_TYPE, course.type)
@@ -113,7 +114,7 @@ class YogaDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
             arrayOf(id.toString())
         )
     }
-
+    // Delete course
     fun deleteCourse(id: Long): Int {
         val db = writableDatabase
         val result = db.delete(TABLE_COURSES, "$COLUMN_COURSE_ID = ?", arrayOf(id.toString()))
@@ -121,6 +122,7 @@ class YogaDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
         return result
     }
 
+    // Get all courses
     fun getAllCourses(): List<YogaCourse> {
         val courses = mutableListOf<YogaCourse>()
         val query = "SELECT * FROM $TABLE_COURSES"
@@ -160,6 +162,7 @@ class YogaDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
         return id
     }
 
+    // Update class
     fun updateClass(id: Long, yogaClass: YogaClass): Int {
         val db = writableDatabase
         val values = ContentValues().apply {
@@ -173,12 +176,15 @@ class YogaDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
         return result
     }
 
+    // Delete class
     fun deleteClass(id: Long): Int {
         val db = writableDatabase
         val result = db.delete(TABLE_CLASSES, "$COLUMN_CLASS_ID = ?", arrayOf(id.toString()))
         db.close()
         return result
     }
+
+    // Get all classes for a course
     fun getClassesForCourse(courseId: Long): List<YogaClass> {
         val classes = mutableListOf<YogaClass>()
         val db = readableDatabase
@@ -201,6 +207,7 @@ class YogaDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
         cursor.close()
         return classes
     }
+    // Get all classes
     fun getAllClasses(): List<YogaClass> {
         val classes = mutableListOf<YogaClass>()
         val db = this.readableDatabase
@@ -224,11 +231,12 @@ class YogaDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
         return classes
     }
 
+    // Search classes by teacher name
     fun searchClassesByTeacher(teacherName: String): List<SearchResult> {
         val results = mutableListOf<SearchResult>()
         val db = readableDatabase
 
-        // Modified query to use LOWER() for case-insensitive search
+        //use LOWER() for case-insensitive search, JOIN to get course details for search results
         val query = """
         SELECT 
             c.$COLUMN_CLASS_ID as classId,
@@ -266,11 +274,12 @@ class YogaDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
         return results
     }
 
+    // Search classes by date
     fun searchClassesByDate(date: String): List<SearchResult> {
         val results = mutableListOf<SearchResult>()
         val db = readableDatabase
 
-        // We need an exact match for the date
+        //use JOIN to get course details for search results and ORDER BY to sort results by time
         val query = """
         SELECT 
             c.$COLUMN_CLASS_ID as classId,
@@ -307,10 +316,12 @@ class YogaDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
         return results
     }
 
+    // Search classes by day of week
     fun searchClassesByDayOfWeek(dayOfWeek: String): List<SearchResult> {
         val results = mutableListOf<SearchResult>()
         val db = readableDatabase
 
+        // use DISTINCT to get unique results, JOIN to get course details for search results
         val query = """
         SELECT DISTINCT
             c.$COLUMN_CLASS_ID as classId,
@@ -347,6 +358,7 @@ class YogaDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
         return results
     }
 
+    // Get course by ID
     fun getCourseById(courseId: Long): YogaCourse? {
         val db = readableDatabase
         val query = "SELECT * FROM $TABLE_COURSES WHERE $COLUMN_COURSE_ID = ?"
@@ -369,5 +381,12 @@ class YogaDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
             cursor.close()
             null
         }
+    }
+    // Reset database
+    fun resetDatabase() {
+        // Drop tables and recreate
+        writableDatabase.execSQL("DROP TABLE IF EXISTS courses")
+        writableDatabase.execSQL("DROP TABLE IF EXISTS classes")
+        onCreate(writableDatabase)
     }
 }

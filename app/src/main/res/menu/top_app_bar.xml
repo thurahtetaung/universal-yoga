@@ -4,7 +4,13 @@
     <item
         android:id="@+id/search"
         android:icon="@drawable/ic_search"
-        android:title="Search"
-        android:contentDescription="Search classes"
+        android:title="@string/string_search_button"
+        android:contentDescription="@string/string_search_classes"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/resetDatabase"
+        android:icon="@drawable/ic_reset"
+        android:title="@string/string_reset_button"
+        android:contentDescription="@string/string_reset_database"
         app:showAsAction="ifRoom" />
 </menu>

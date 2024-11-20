@@ -1,6 +1,5 @@
 package com.example.universalyoga
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,10 +10,12 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 class ScheduledClassAdapter(
+    // The list of classes to display
     private var classes: List<YogaClass>,
     private val onOptionsClick: (View, YogaClass) -> Unit
 ) : RecyclerView.Adapter<ScheduledClassAdapter.ClassViewHolder>() {
 
+    // Date format for displaying class dates
     private val dateFormat = SimpleDateFormat("MMMM d, yyyy", Locale.getDefault())
 
     class ClassViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -23,6 +24,7 @@ class ScheduledClassAdapter(
         private val commentsText: TextView = itemView.findViewById(R.id.commentsText)
         val optionsButton: ImageButton = itemView.findViewById(R.id.classOptionsButton)
 
+        // Bind the YogaClass data to the views
         fun bind(yogaClass: YogaClass) {
             dateText.text = yogaClass.date
             teacherText.text = "Teacher: ${yogaClass.teacher}"
@@ -38,7 +40,8 @@ class ScheduledClassAdapter(
     }
 
     override fun onBindViewHolder(holder: ClassViewHolder, position: Int) {
-        val yogaClass = classes[position]
+        val yogaClass = classes[position] // Get the YogaClass object at the current position
+        // Bind the YogaClass data to the ViewHolder
         holder.bind(yogaClass)
         holder.optionsButton.setOnClickListener { view ->
             onOptionsClick(view, yogaClass)
@@ -47,6 +50,7 @@ class ScheduledClassAdapter(
 
     override fun getItemCount() = classes.size
 
+    // Update the list of classes and notify the adapter of the change
     fun updateClasses(newClasses: List<YogaClass>) {
         classes = newClasses.sortedBy {
             dateFormat.parse(it.date)?.time ?: 0L

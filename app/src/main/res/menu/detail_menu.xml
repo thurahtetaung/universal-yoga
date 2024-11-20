@@ -4,14 +4,14 @@
     <item
         android:id="@+id/editCourse"
         android:icon="@drawable/ic_edit"
-        android:title="Edit Course"
-        android:contentDescription="Edit this course"
+        android:title="@string/string_edit_course"
+        android:contentDescription="@string/string_edit_this_course"
         app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/deleteCourse"
         android:icon="@drawable/ic_delete"
-        android:title="Delete Course"
-        android:contentDescription="Delete this course"
+        android:title="@string/string_delete_course"
+        android:contentDescription="@string/string_delete_this_course"
         app:showAsAction="ifRoom" />
 </menu>

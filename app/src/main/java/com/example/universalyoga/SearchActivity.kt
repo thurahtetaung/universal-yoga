@@ -43,7 +43,7 @@ class SearchActivity : AppCompatActivity() {
         dbHelper = YogaDBHelper(this)
         initializeViews()
         setupToolbar()
-        setupTabLayout()
+        setupTabLayout() // Switch between teacher, date, and day search
         setupSearchInputs()
         setupRecyclerView()
         // Directly show teacher search and perform search
@@ -52,7 +52,6 @@ class SearchActivity : AppCompatActivity() {
         // Handle back button press
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                // Your custom back button handling logic
                 finish()
             }
         })
@@ -82,14 +81,17 @@ class SearchActivity : AppCompatActivity() {
             override fun onTabSelected(tab: TabLayout.Tab?) {
                 when (tab?.position) {
                     0 -> {
+                        // Show teacher search layout and perform search
                         showTeacherSearch()
                         performTeacherSearch(teacherSearchInput.text.toString())
                     }
                     1 -> {
+                        // Show date search layout and perform search
                         showDateSearch()
                         performDateSearch(dateSearchInput.text.toString())
                     }
                     2 -> {
+                        // Show day search layout and perform search
                         showDaySearch()
                         performDaySearch(daySearchInput.text.toString())
                     }
@@ -103,10 +105,11 @@ class SearchActivity : AppCompatActivity() {
     private fun setupSearchInputs() {
         // Teacher search
         teacherSearchInput.addTextChangedListener(object : TextWatcher {
+            // Perform search when text changes in the input field
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
-                if ((s?.length ?: 0) >= 2) { // Search start after 2 characters
+                if ((s?.length ?: 0) >= 2) { // Search start after 2 characters are entered
                     performTeacherSearch(s.toString())
                 }
             }
@@ -148,6 +151,7 @@ class SearchActivity : AppCompatActivity() {
         }
     }
 
+    // Show teacher search layout
     private fun showTeacherSearch() {
         teacherSearchLayout.visibility = View.VISIBLE
         dateSearchLayout.visibility = View.GONE
@@ -155,6 +159,7 @@ class SearchActivity : AppCompatActivity() {
         clearSearchResults()
     }
 
+    // Show date search layout
     private fun showDateSearch() {
         teacherSearchLayout.visibility = View.GONE
         dateSearchLayout.visibility = View.VISIBLE
@@ -162,6 +167,7 @@ class SearchActivity : AppCompatActivity() {
         clearSearchResults()
     }
 
+    // Show day search layout
     private fun showDaySearch() {
         teacherSearchLayout.visibility = View.GONE
         dateSearchLayout.visibility = View.GONE
@@ -174,11 +180,14 @@ class SearchActivity : AppCompatActivity() {
             .setTitleText("Select date")
             .build()
 
+        // Set the selected date in the input field when the user confirms the selection
         datePicker.addOnPositiveButtonClickListener { selection ->
             val calendar = Calendar.getInstance()
             calendar.timeInMillis = selection
+            // Format the selected date and set it in the input field
             val dateFormat = SimpleDateFormat("MMMM d, yyyy", Locale.getDefault())
             val formattedDate = dateFormat.format(calendar.time)
+            // Update the input field and perform the search
             dateSearchInput.setText(formattedDate)
             performDateSearch(formattedDate)
         }
@@ -187,9 +196,11 @@ class SearchActivity : AppCompatActivity() {
     }
 
     private fun performTeacherSearch(query: String) {
+        // If the search query is empty, clear the search results
         if (query.isBlank()) {
             clearSearchResults()
         } else {
+            // Perform the search and update the results
             val results = dbHelper.searchClassesByTeacher(query)
             updateSearchResults(results)
         }
